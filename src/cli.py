@@ -54,17 +54,21 @@ def run(line: str) -> Result:
 
 @command('help')
 def help(command: str | None = None):
-	"""取得指令說明，語法：help [<指令名稱>]"""
+	"""取得指令說明。語法：help [<指令名稱>]。
+
+	當未指定目標指令時，將輸出可用指令清單，附帶各自的簡短說明。
+	"""
 	if command is not None:
 		if command not in descriptions:
 			raise CommandError(f"未知指令：{command}")
-		print(descriptions[command] or '缺乏關於該指令的說明。')
+		desc = descriptions[command]
+		print(desc.strip() if desc is not None else '缺乏關於該指令的說明。')
 		return
 	for k, v in descriptions.items():
-		print(k, '-', v if v else '無說明')
+		print(k, '-', v.strip().splitlines()[0] if v else '無說明。')
 
 @command('exit')
 def exit():
-	"""退出系統，無參數"""
+	"""退出系統，無參數。"""
 	print('退出系統！')
 	return Result.EXIT
