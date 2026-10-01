@@ -1,22 +1,70 @@
 from collections.abc import Callable
+from enum import Enum, auto
+import functools
+import shlex
+import inspect
 
-commands: dict[str, Callable] = {}
+_commands: dict[str, Callable] = {}
+_descriptions: dict[str, str | None] = {}
 
 def command(name: str):
 	def decorator(func: Callable):
-		assert name not in commands, f"Command already exists: {name}"
-		commands[name] = func
+		assert name not in _commands, f"Command already exists: {name}"
+		@functools.wraps(func)
+		def newFunc(*args, **kwargs):
+			try:
+				inspect.signature(func).bind(*args, **kwargs)
+			except TypeError as err:
+				raise CommandError(f'參數數量錯誤：{err}') from err
+			return func(*args, **kwargs)
+		_commands[name] = newFunc
+		_descriptions[name] = func.__doc__
+		return newFunc
 	return decorator
 
 class CommandError(Exception):
 	pass
 
-def execute(name: str, args: list[str]):
-	try:
-		func = commands.get(name)
-		if func is None:
-			raise CommandError(f"Unknown command: {name}")
-		func(*args)
+class Result(Enum):
+	SUCCESS = auto()
+	ERROR = auto()
+	NONE = auto()
+	EXIT = auto()
 
+def execute(line: str) -> Result:
+	try:
+		args = shlex.split(line)
+	except ValueError as err:
+		raise CommandError(f"解析錯誤：{err}") from err
+	if len(args) == 0:
+		return Result.NONE
+	name, args = args[0], args[1:]
+	func = _commands.get(name)
+	if func is None:
+		raise CommandError(f"未知指令：{name}")
+	result = func(*args)
+	return Result.SUCCESS if result is None else result
+
+def run(line: str) -> Result:
+	try:
+		return execute(line)
 	except CommandError as err:
-		print(f'Error: {err}')
+		print(f'\033[91m錯誤！{err}\033[0m')
+		return Result.ERROR
+
+@command('help')
+def help(command: str | None = None):
+	"""取得指令說明，語法：help [<指令名稱>]"""
+	if command is not None:
+		if command not in _descriptions:
+			raise CommandError(f"未知指令：{command}")
+		print(_descriptions[command] or '缺乏關於該指令的說明。')
+		return
+	for k, v in _descriptions.items():
+		print(k, '-', v if v else '無說明。')
+
+@command('exit')
+def exit():
+	"""退出系統，無參數。"""
+	print('退出系統！')
+	return Result.EXIT
