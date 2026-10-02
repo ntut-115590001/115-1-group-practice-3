@@ -4,13 +4,17 @@ from unittest.mock import Mock, patch
 import src.cli as cli
 
 class TestCli(unittest.TestCase):
-	def setUp(self) -> None:
-		self.commands = cli.commands.copy()
-		self.descriptions = cli.descriptions.copy()
+	commands: dict
+	descriptions: dict
+
+	@classmethod
+	def setUpClass(cls) -> None:
+		TestCli.commands = cli.commands.copy()
+		TestCli.descriptions = cli.descriptions.copy()
 
 	def tearDown(self) -> None:
-		cli.commands = self.commands.copy()
-		cli.descriptions = self.descriptions.copy()
+		cli.commands = TestCli.commands.copy()
+		cli.descriptions = TestCli.descriptions.copy()
 
 	def test_commandWrap(self):
 		@cli.command('zero')
