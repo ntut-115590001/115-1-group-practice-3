@@ -19,20 +19,20 @@ class TestCli(unittest.TestCase):
 	def test_commandWrap(self):
 		@cli.command('zero')
 		def zero():
-			pass
+			pass # pragma: no cover
 		self.assertIs(zero(), cli.Result.SUCCESS)
 		self.assertRaises(cli.CommandError, zero, '1')
 
 		@cli.command('one')
 		def one(one: str):
-			pass
+			pass # pragma: no cover
 		self.assertRaises(cli.CommandError, one)
 		self.assertIs(one('1'), cli.Result.SUCCESS)
 		self.assertRaises(cli.CommandError, one, '1', '2')
 
 		@cli.command('one-or-two')
 		def oneOrTwo(one: str, two: str | None = None):
-			pass
+			pass # pragma: no cover
 		self.assertRaises(cli.CommandError, oneOrTwo)
 		self.assertIs(oneOrTwo('1'), cli.Result.SUCCESS)
 		self.assertIs(oneOrTwo('1', '2'), cli.Result.SUCCESS)
@@ -40,7 +40,7 @@ class TestCli(unittest.TestCase):
 		
 		@cli.command('unlimit')
 		def unlimit(*args: str):
-			pass
+			pass # pragma: no cover
 		self.assertIs(unlimit(), cli.Result.SUCCESS)
 		self.assertIs(unlimit('1'), cli.Result.SUCCESS)
 		self.assertIs(unlimit('1', '2'), cli.Result.SUCCESS)
@@ -48,7 +48,7 @@ class TestCli(unittest.TestCase):
 		@cli.command('internal')
 		def internal():
 			def test(arg: str):
-				pass
+				pass # pragma: no cover
 			test(*[])
 		self.assertRaises(cli.CommandError, internal, '1')
 		self.assertRaises(TypeError, internal)
@@ -62,14 +62,14 @@ class TestCli(unittest.TestCase):
 		@cli.command('foo')
 		def foo():
 			"""foo is not bar"""
-			pass
+			pass # pragma: no cover
 		self.assertIs(cli.commands['foo'], foo)
 		self.assertEqual(cli.descriptions['foo'], "foo is not bar")
 
 		with self.assertRaises(Exception):
 			@cli.command('foo')
 			def foo():
-				pass
+				pass # pragma: no cover
 
 	def test_execute(self):
 		mock = Mock(return_value = None)
@@ -101,7 +101,7 @@ class TestCli(unittest.TestCase):
 			elif err is not None:
 				[][1]
 		self.assertIs(cli.Result.ERROR, cli.run('example true'))
-		self.assertRegex(mockStdout.getvalue(), 'custom error!')
+		self.assertIn('custom error!', mockStdout.getvalue())
 		self.assertIs(cli.Result.SUCCESS, cli.run('example'))
 		self.assertRaises(IndexError, cli.run, 'example false')
 
@@ -112,23 +112,23 @@ class TestCli(unittest.TestCase):
 
 			...or, is it?
 			"""
-			pass
+			pass # pragma: no cover
 
 		@cli.command('cmd-b')
 		def cmdB():
 			"""Bar is foo."""
-			pass
+			pass # pragma: no cover
 
 		@cli.command('mystery')
 		def mystery():
-			pass
+			pass # pragma: no cover
 
 		with patch('sys.stdout', new_callable = StringIO) as mockStdout:
 			cli.help()
 			output = mockStdout.getvalue()
 			for text in ('cmd-a', 'cmd-b', 'mystery', 'Foo is not bar.', 'Bar is foo.'):
-				self.assertRegex(output, text)
-			self.assertNotRegex(output, '...or, is it?')
+				self.assertIn(text, output)
+			self.assertNotIn('...or, is it?', output)
 
 		for (cmd, doc) in (
 			('cmd-a', 'Foo is not bar.\n\n...or, is it?'),
@@ -138,7 +138,7 @@ class TestCli(unittest.TestCase):
 			with patch('sys.stdout', new_callable = StringIO) as mockStdout:
 				cli.help(cmd)
 				if doc:
-					self.assertRegex(mockStdout.getvalue(), doc)
+					self.assertIn(doc, mockStdout.getvalue())
 		
 		self.assertRaises(cli.CommandError, cli.help, 'non-existent')
 

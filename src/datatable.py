@@ -1,52 +1,75 @@
-import json
+from collections.abc import Sequence
 import csv
 from pathlib import Path
-from typing import Iterable, NamedTuple
+from typing import Self
 
-from src.cli import command
-
-type datatable = dict[str, dict[str, str]]
-datatables: dict[datatable, tuple[Path, str, list[str]]] = {}
+from src.cli import CommandError, command
 
 datapath = Path('../data')
 
 class Datatable(dict[str, dict[str, str]]):
-	def __init__(self, name: str, fieldnames: list[str]) -> None:
-		datapath.mkdir(exist_ok= True)
+	datatables: dict[str, Self] = {}
+
+	def __init__(self, name: str, fieldnames: Sequence[str]) -> None:
+		if name in Datatable.datatables:
+			raise ValueError(f"Datatable already exists: {name}")
 		self.name = name
 		self.fieldnames = fieldnames
 		self.path = datapath / (name + '.csv')
+		super().__init__()
 		if self.path.exists():
-			with open(self.path, 'r', newline='') as csvFile:
-				super().__init__({fields[0]: dict(zip(fieldnames, fields[1:])) for fields in csv.reader(csvFile)})
-		else:
-			super().__init__()
+			self.load()
+		Datatable.datatables[self.name] = self
 
+	def load(self):
+		self.clear()
+		with self.path.open('r', newline='') as csvFile:
+			self.update({fields[0]: dict(zip(self.fieldnames, fields[1:])) for fields in csv.reader(csvFile)})
+	
 	def save(self):
-		with open(self.path, 'w', newline='') as csvFile:
+		datapath.mkdir(exist_ok= True)
+		with self.path.open('w', newline='') as csvFile:
 			writer = csv.writer(csvFile)
 			for id, values in self.items():
-				writer.writerows([id] + [values[field] for field in self.fieldnames])
-
-def loadTable(name: str, fieldnames: list[str]):
-	datapath.mkdir(exist_ok= True)
-	path = datapath / (name + '.csv')
-	table: datatable = {}
-	if path.exists():
-		with open(path, 'r', newline='') as csvFile:
-			table.update({fields[0]: dict(zip(fieldnames, fields[1:])) for fields in csv.reader(csvFile)})
-	datatables[table] = (path, name, fieldnames)
-	return table
-
-def save(table: datatable):
-	if table not in datatables:
-		raise ValueError("The input table wasn't registered!")
-	path, name, fieldnames = datatables[table]
-	with open(path, 'w', newline='') as csvFile:
-		writer = csv.writer(csvFile)
-		for id, values in table.items():
-			writer.writerows([id] + [values[field] for field in fieldnames])
+				writer.writerow([id] + [values[field] for field in self.fieldnames])
 
 def saveAll():
-	for table in datatables.keys():
-		save(table)
+	for table in Datatable.datatables.values():
+		table.save()
+
+@command('datatable')
+def datatable(action: str, tablename: str = ''):
+	"""操作現有資料表（除錯用）
+	
+	語法：
+	* datatable list
+	* datatable print <名稱>
+	* datatable save [<名稱>]
+	* datatable reload [<名稱>]
+	"""
+	if not action in ('list', 'print', 'save', 'reload'):
+		raise CommandError(f'未知操作：{action}！')
+	if action == 'list':
+		if tablename:
+			raise CommandError('datatable list 不接受額外參數！')
+		print('存在以下資料表：')
+		print(', '.join([*Datatable.datatables.keys()]))
+		return
+
+	if tablename and tablename not in Datatable.datatables:
+		raise CommandError(f'資料表 {tablename} 不存在！')
+
+	datatables = [Datatable.datatables[tablename]] if tablename else [*Datatable.datatables.values()]
+
+	if action == 'print':
+		if not tablename:
+			raise CommandError('資料表未指定！')
+		print(datatables[0])
+		return
+
+	for table in datatables:
+		try:
+			table.load() if action == 'reload' else table.save()
+		except Exception as err:
+			raise CommandError(f'資料表 {table.name} 讀寫失敗：{err}') from err
+	print(f'成功讀寫資料表 {', '.join(map(lambda x: x.name, datatables))}。')
