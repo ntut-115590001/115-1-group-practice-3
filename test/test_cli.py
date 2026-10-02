@@ -92,12 +92,14 @@ class TestCli(unittest.TestCase):
 	def test_run(self, mockStdout: StringIO):
 		@cli.command('example')
 		def example(err: str | None = None):
-			if err is not None:
+			if err == 'true':
 				raise cli.CommandError('custom error!')
-
+			elif err is not None:
+				[][1]
 		self.assertIs(cli.Result.ERROR, cli.run('example true'))
-		self.assertIs(cli.Result.SUCCESS, cli.run('example'))
 		self.assertRegex(mockStdout.getvalue(), 'custom error!')
+		self.assertIs(cli.Result.SUCCESS, cli.run('example'))
+		self.assertRaises(IndexError, cli.run, 'example false')
 
 	def test_help(self):
 		@cli.command('cmd-a')
@@ -133,6 +135,8 @@ class TestCli(unittest.TestCase):
 				cli.help(cmd)
 				if doc:
 					self.assertRegex(mockStdout.getvalue(), doc)
+		
+		self.assertRaises(cli.CommandError, cli.help, 'non-existent')
 
 	@patch('sys.stdout', new_callable = StringIO)
 	def test_exit(self, mockStdout: StringIO):
