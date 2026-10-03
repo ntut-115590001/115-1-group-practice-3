@@ -50,7 +50,7 @@ class Datatable(dict[str, dict[str, str]]):
 
 @command('datatable')
 def datatable(action: str, tablename: str | None = None) -> None:
-	"""操作現有資料表（除錯用）
+	"""操作現有資料表（除錯用）。
 	
 	語法：
 	* datatable list

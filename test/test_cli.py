@@ -94,7 +94,7 @@ class TestCli(unittest.TestCase):
         self.assertIs(cli.Result.NONE, cli.execute(''))
 
     @patch('sys.stdout', new_callable=StringIO)
-    def test_run(self, mockStdout: StringIO):
+    def test_run(self, mock_stdout: StringIO):
         @cli.command('example')
         def example(err: str | None = None):
             if err == 'true':
@@ -102,7 +102,7 @@ class TestCli(unittest.TestCase):
             elif err is not None:
                 [][1]
         self.assertIs(cli.Result.FAIL, cli.run('example true'))
-        self.assertIn('custom error!', mockStdout.getvalue())
+        self.assertIn('custom error!', mock_stdout.getvalue())
         self.assertIs(cli.Result.SUCCESS, cli.run('example'))
         self.assertRaises(IndexError, cli.run, 'example false')
 
@@ -124,9 +124,9 @@ class TestCli(unittest.TestCase):
         def mystery():
             pass # pragma: no cover
 
-        with patch('sys.stdout', new_callable=StringIO) as mockStdout:
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
             cli.help()
-            output = mockStdout.getvalue()
+            output = mock_stdout.getvalue()
             for text in ('cmd-a', 'cmd-b', 'mystery', 'Foo is not bar.', 'Bar is foo.'):
                 self.assertIn(text, output)
             self.assertNotIn('...or, is it?', output)
@@ -136,13 +136,13 @@ class TestCli(unittest.TestCase):
             ('cmd-b', 'Bar is foo.'),
             ('mystery', None),
         ):
-            with patch('sys.stdout', new_callable=StringIO) as mockStdout:
+            with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
                 cli.help(cmd)
                 if doc:
-                    self.assertIn(doc, mockStdout.getvalue())
+                    self.assertIn(doc, mock_stdout.getvalue())
         
         self.assertRaises(cli.CommandError, cli.help, 'non-existent')
 
     @patch('sys.stdout', new_callable=StringIO)
-    def test_exit(self, mockStdout: StringIO):
+    def test_exit(self, mock_stdout: StringIO):
         self.assertIs(cli.Result.EXIT, cli.exit())
