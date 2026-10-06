@@ -9,6 +9,7 @@ if TYPE_CHECKING: from _typeshed import SupportsKeysAndGetItem
 
 from src.cli import CommandError, command
 
+
 DATAPATH = Path('data')
 
 
@@ -24,7 +25,8 @@ class _Datarow(UserDict[str, str]):
         super().__init__(dict, **kwargs)
 
     def __setitem__(self, key: str, item: str) -> None:
-        if not key in self._fieldnames: raise ValueError(f"The key {key} isn't an available field name!")
+        if not key in self._fieldnames:
+            raise ValueError(f"The key {key} isn't an available field name!")
         if not item: return None
         return super().__setitem__(key, item)
 
@@ -46,14 +48,14 @@ class Datatable(dict[str, _Datarow]):
         self.datatables[self.name] = self
 
     def load(self) -> None:
-        """Load data from a CSV file on the disk."""
+        """Load data from the associated CSV file on the disk."""
         self.clear()
         with self.path.open('r', newline='') as csvFile:
             self.update({fields[0]: _Datarow(self.fieldnames, zip(self.fieldnames, fields[1:]))
                          for fields in csv.reader(csvFile)})
 
     def save(self) -> None:
-        """Save data into a CSV file on the disk."""
+        """Save data into the associated CSV file on the disk."""
         DATAPATH.mkdir(exist_ok= True)
         with self.path.open('w', newline='') as csvFile:
             writer = csv.writer(csvFile)
@@ -65,7 +67,9 @@ class Datatable(dict[str, _Datarow]):
         default: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
         /
     ) -> _Datarow:
-        if key in self: raise ValueError(f'Row {key} is already existed!')
+        """Create a new row in the Datatable. Use this instead of `table[id] = {}`."""
+        if key in self:
+            raise ValueError(f'Row {key} is already existed!')
         return self.setdefault(key, _Datarow(self.fieldnames, default))
 
     @classmethod

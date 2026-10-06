@@ -5,11 +5,10 @@ import inspect
 import shlex
 from collections.abc import Callable
 from enum import Enum, auto
-from typing import ParamSpec, TypeVar
+from typing import ParamSpec
 
 
 _commands: dict[str, Callable[..., Result]] = {}
-_descriptions: dict[str, str | None] = {}
 
 
 class Result(Enum):
@@ -30,12 +29,13 @@ class CommandError(Exception):
     """Exception raised when a command fails."""
     pass
 
+
 P = ParamSpec('P')
-T = TypeVar('T')
 def command(name: str) -> Callable[[Callable[P, Result | None]], Callable[P, Result]]:
     """Register the function as a new command."""
     def decorator(func: Callable[P, Result | None]) -> Callable[P, Result]:
-        assert name not in _commands, f'Command already exists: {name}'
+        if name in _commands:
+            raise ValueError(f'Command already exists: {name}')
         @functools.wraps(func)
         def new_func(*args: P.args, **kwargs: P.kwargs) -> Result:
             try:
@@ -45,7 +45,6 @@ def command(name: str) -> Callable[[Callable[P, Result | None]], Callable[P, Res
             result = func(*args, **kwargs)
             return Result.SUCCESS if result is None else result
         _commands[name] = new_func
-        _descriptions[name] = inspect.getdoc(func)
         return new_func
     return decorator
 
@@ -80,14 +79,14 @@ def help(command: str | None = None):
     當未指定目標指令時，將輸出可用指令清單，附帶各自的簡短說明。
     """
     if command is not None:
-        if command not in _descriptions:
+        if command not in _commands:
             raise CommandError(f'未知指令：{command}')
-        desc = _descriptions[command]
+        desc = inspect.getdoc(_commands[command])
         print(desc if desc is not None else '缺乏關於該指令的說明。')
         return
-    for k, v in _descriptions.items():
-        print(k, '-', v.splitlines()[0] if v else '無說明。')
-
+    for k, v in _commands.items():
+        desc = inspect.getdoc(v)
+        print(k, '-', desc.splitlines()[0] if desc is not None else '無說明。')
 
 @command('exit')
 def exit():

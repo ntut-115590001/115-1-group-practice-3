@@ -1,8 +1,8 @@
+import tempfile
+import unittest
 from io import StringIO
 from pathlib import Path
-import tempfile
 from typing import cast
-import unittest
 from unittest.mock import patch
 
 from src import cli
@@ -75,6 +75,7 @@ class DatatableTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             table['1']['names'] = 'Leo'
         self.assertRaises(ValueError, table.new_row, '1', { 'age': '18' })
+        self.assertRaises(ValueError, table.new_row, '4', { 'ages': '18' })
 
     def test_save_all(self):
         (self.data_path / 'first.csv').write_text('1,A\n')

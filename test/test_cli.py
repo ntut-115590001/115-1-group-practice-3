@@ -10,11 +10,9 @@ class TestCli(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.commands = cli._commands.copy()
-        cls.descriptions = cli._descriptions.copy()
 
     def tearDown(self):
         cli._commands = TestCli.commands.copy()
-        cli._descriptions = TestCli.descriptions.copy()
 
     def test_command_wrap(self):
         @cli.command('zero')
@@ -64,9 +62,8 @@ class TestCli(unittest.TestCase):
             """foo is not bar"""
             pass # pragma: no cover
         self.assertIs(cli._commands['foo'], foo)
-        self.assertEqual(cli._descriptions['foo'], "foo is not bar")
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             @cli.command('foo')
             def foo():
                 pass # pragma: no cover
@@ -93,6 +90,7 @@ class TestCli(unittest.TestCase):
         self.assertRaises(IndexError, cli.execute, 'foo-bar content')
 
         self.assertIs(cli.Result.NONE, cli.execute(''))
+        self.assertIs(cli.Result.NONE, cli.execute('  \t '))
 
     @patch('sys.stdout', new_callable=StringIO)
     def test_run(self, mock_stdout: StringIO):
