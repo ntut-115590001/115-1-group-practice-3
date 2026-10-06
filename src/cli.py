@@ -8,6 +8,10 @@ from enum import Enum, auto
 from typing import ParamSpec, TypeVar
 
 
+_commands: dict[str, Callable[..., Result]] = {}
+_descriptions: dict[str, str | None] = {}
+
+
 class Result(Enum):
     """Return value of command functions.
     
@@ -26,17 +30,12 @@ class CommandError(Exception):
     """Exception raised when a command fails."""
     pass
 
-
-commands: dict[str, Callable[..., Result]] = {}
-descriptions: dict[str, str | None] = {}
-
-
 P = ParamSpec('P')
 T = TypeVar('T')
 def command(name: str) -> Callable[[Callable[P, Result | None]], Callable[P, Result]]:
     """Register the function as a new command."""
     def decorator(func: Callable[P, Result | None]) -> Callable[P, Result]:
-        assert name not in commands, f'Command already exists: {name}'
+        assert name not in _commands, f'Command already exists: {name}'
         @functools.wraps(func)
         def new_func(*args: P.args, **kwargs: P.kwargs) -> Result:
             try:
@@ -45,8 +44,8 @@ def command(name: str) -> Callable[[Callable[P, Result | None]], Callable[P, Res
                 raise CommandError(f'參數數量錯誤：{err}') from err
             result = func(*args, **kwargs)
             return Result.SUCCESS if result is None else result
-        commands[name] = new_func
-        descriptions[name] = inspect.getdoc(func)
+        _commands[name] = new_func
+        _descriptions[name] = inspect.getdoc(func)
         return new_func
     return decorator
 
@@ -60,7 +59,7 @@ def execute(line: str) -> Result:
     if not args:
         return Result.NONE
     name, args = args[0], args[1:]
-    func = commands.get(name)
+    func = _commands.get(name)
     if func is None:
         raise CommandError(f'未知指令：{name}')
     return func(*args)
@@ -81,12 +80,12 @@ def help(command: str | None = None):
     當未指定目標指令時，將輸出可用指令清單，附帶各自的簡短說明。
     """
     if command is not None:
-        if command not in descriptions:
+        if command not in _descriptions:
             raise CommandError(f'未知指令：{command}')
-        desc = descriptions[command]
+        desc = _descriptions[command]
         print(desc if desc is not None else '缺乏關於該指令的說明。')
         return
-    for k, v in descriptions.items():
+    for k, v in _descriptions.items():
         print(k, '-', v.splitlines()[0] if v else '無說明。')
 
 

@@ -1,19 +1,20 @@
+# pyright: reportPrivateUsage = false
 import unittest
 from io import StringIO
 from unittest.mock import Mock, patch
 
-import src.cli as cli
+from src import cli
 
 
 class TestCli(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.commands = cli.commands.copy()
-        cls.descriptions = cli.descriptions.copy()
+        cls.commands = cli._commands.copy()
+        cls.descriptions = cli._descriptions.copy()
 
     def tearDown(self):
-        cli.commands = TestCli.commands.copy()
-        cli.descriptions = TestCli.descriptions.copy()
+        cli._commands = TestCli.commands.copy()
+        cli._descriptions = TestCli.descriptions.copy()
 
     def test_command_wrap(self):
         @cli.command('zero')
@@ -62,8 +63,8 @@ class TestCli(unittest.TestCase):
         def foo():
             """foo is not bar"""
             pass # pragma: no cover
-        self.assertIs(cli.commands['foo'], foo)
-        self.assertEqual(cli.descriptions['foo'], "foo is not bar")
+        self.assertIs(cli._commands['foo'], foo)
+        self.assertEqual(cli._descriptions['foo'], "foo is not bar")
 
         with self.assertRaises(Exception):
             @cli.command('foo')

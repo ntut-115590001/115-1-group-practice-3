@@ -1,6 +1,7 @@
+#!/usr/bin/python3
 """The main program of the system."""
 
-import src.cli as cli
+from src import cli
 from src.datatable import Datatable
 
 
@@ -19,5 +20,5 @@ try:
             print('退出系統！')
             break
 finally:
-    Datatable.saveAll()
+    Datatable.save_all()
     pass

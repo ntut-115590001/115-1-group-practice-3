@@ -5,9 +5,9 @@ from typing import cast
 import unittest
 from unittest.mock import patch
 
-import src.cli as cli
+from src import cli
+from src import datatable
 from src.datatable import Datatable
-import src.datatable as datatable
 
 
 class DatatableTests(unittest.TestCase):
@@ -45,11 +45,11 @@ class DatatableTests(unittest.TestCase):
 
     def test_load(self):
         table = Datatable('people', ('name', 'age'))
-        table['old'] = {'name': 'Old', 'age': '1'}
-        (self.data_path / 'people.csv').write_text('1,Ada,36\n')
+        table.new_row('old', {'name': 'Old', 'age': '1'})
+        (self.data_path / 'people.csv').write_text('1,Ada,36\n2,,42')
 
         table.load()
-        self.assertEqual(table, {'1': {'name': 'Ada', 'age': '36'}})
+        self.assertEqual(table, {'1': {'name': 'Ada', 'age': '36'}, '2': {'age': '42'}})
 
         (self.data_path / 'people.csv').unlink()
 
@@ -57,13 +57,24 @@ class DatatableTests(unittest.TestCase):
 
     def test_save(self):
         table = Datatable('people', ('name', 'age'))
-        table['1'] = {'name': 'Ada', 'age': '36'}
-        table['2'] = {'name': 'Bob', 'age': '42'}
+        table.new_row('1', {'name': 'Ada', 'age': '36'})
+        table.new_row('2', {'name': 'Bob', 'age': '42'})
 
         table.save()
 
         self.assertTrue(table.path.exists())
         self.assertEqual(table.path.read_text(), '1,Ada,36\n2,Bob,42\n')
+
+    def test_new_row(self):
+        (self.data_path / 'people.csv').write_text('1,Ada,36\n2,Bob,42\n')
+        table = Datatable('people', ('name', 'age'))
+
+        table['1']['name'] = 'Leo'
+        self.assertEqual(table['1']['name'], 'Leo')
+        self.assertEqual(table.new_row('3', { 'age': '18' })['age'], '18')
+        with self.assertRaises(ValueError):
+            table['1']['names'] = 'Leo'
+        self.assertRaises(ValueError, table.new_row, '1', { 'age': '18' })
 
     def test_save_all(self):
         (self.data_path / 'first.csv').write_text('1,A\n')
@@ -71,9 +82,9 @@ class DatatableTests(unittest.TestCase):
         first = Datatable('first', ('value',))
         second = Datatable('second', ('value',))
         first.clear()
-        second['1'] = {'value': 'A'}
+        second['1'].update({'value': 'A'})
 
-        Datatable.saveAll()
+        Datatable.save_all()
 
         self.assertEqual((self.data_path / 'first.csv').read_text(), '')
         self.assertEqual((self.data_path / 'second.csv').read_text(), '1,A\n')
@@ -93,8 +104,8 @@ class DatatableTests(unittest.TestCase):
     @patch('sys.stdout', new_callable=StringIO)
     def test_command_datatable_print(self, mock_stdout: StringIO):
         table = Datatable('people', ('name', 'age'))
-        table['1'] = {'name': 'Ada', 'age': '36'}
-        table['2'] = {'name': 'Bob', 'age': '42'}
+        table.new_row('1', {'name': 'Ada', 'age': '36'})
+        table.new_row('2', {'name': 'Bob', 'age': '42'})
 
         datatable.datatable('print', 'people')
         output = mock_stdout.getvalue()
