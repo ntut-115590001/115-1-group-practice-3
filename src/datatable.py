@@ -1,47 +1,32 @@
 """Implement Datatable for writing and reading data that should be stored on the disk."""
 
 import csv
-from collections import UserDict
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable
 from pathlib import Path
-from typing import Self, TYPE_CHECKING
-if TYPE_CHECKING: from _typeshed import SupportsKeysAndGetItem
+from typing import Any
 
 from src.cli import CommandError, command
-
 
 DATAPATH = Path('data')
 
 
-class _Datarow(UserDict[str, str]):
+class Datatable[T](dict[str, T]):
+    """Represent the dictionary associated with a CSV file."""
+    datatables: dict[str, Datatable[Any]] = {}
+
     def __init__(
         self,
-        fieldnames: Sequence[str],
-        dict: SupportsKeysAndGetItem[str, str] | Iterable[tuple[str, str]] | None = None,
-        /,
-        **kwargs: str
+        name: str,
+        from_row: Callable[[list[str]], T],
+        to_row: Callable[[T], list[str]]
     ) -> None:
-        self._fieldnames = fieldnames
-        super().__init__(dict, **kwargs)
-
-    def __setitem__(self, key: str, item: str) -> None:
-        if not key in self._fieldnames:
-            raise ValueError(f"The key {key} isn't an available field name!")
-        if not item: return None
-        return super().__setitem__(key, item)
-
-
-class Datatable(dict[str, _Datarow]):
-    """Represent the dictionary associated with a CSV file."""
-    datatables: dict[str, Self] = {}
-
-    def __init__(self, name: str, fieldnames: Sequence[str]) -> None:
         """Create a Datatable with associated CSV filename and field mapping names."""
-        if name in Datatable.datatables:
+        if name in self.datatables:
             raise ValueError(f"Datatable already exists: {name}")
         self.name = name
-        self.fieldnames = fieldnames
         self.path = DATAPATH / (name + '.csv')
+        self.from_row = from_row
+        self.to_row = to_row
         super().__init__()
         if self.path.exists():
             self.load()
@@ -51,8 +36,7 @@ class Datatable(dict[str, _Datarow]):
         """Load data from the associated CSV file on the disk."""
         self.clear()
         with self.path.open('r', newline='') as csvFile:
-            self.update({fields[0]: _Datarow(self.fieldnames, zip(self.fieldnames, fields[1:]))
-                         for fields in csv.reader(csvFile)})
+            self.update({fields[0]: self.from_row(fields[1:]) for fields in csv.reader(csvFile)})
 
     def save(self) -> None:
         """Save data into the associated CSV file on the disk."""
@@ -60,17 +44,7 @@ class Datatable(dict[str, _Datarow]):
         with self.path.open('w', newline='') as csvFile:
             writer = csv.writer(csvFile)
             for id, values in self.items():
-                writer.writerow([id] + [values.get(field, '') for field in self.fieldnames])
-
-    def new_row(self,
-        key: str,
-        default: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
-        /
-    ) -> _Datarow:
-        """Create a new row in the Datatable. Use this instead of `table[id] = {}`."""
-        if key in self:
-            raise ValueError(f'Row {key} is already existed!')
-        return self.setdefault(key, _Datarow(self.fieldnames, default))
+                writer.writerow([id] + self.to_row(values))
 
     @classmethod
     def save_all(cls) -> None:
