@@ -63,6 +63,7 @@ def execute(line: str) -> Result:
         raise CommandError(f'未知指令：{name}')
     return func(*args)
 
+
 def run(line: str) -> Result:
     """Parse the command and call the corresponding function, with handling CommandError."""
     try:
@@ -87,6 +88,7 @@ def help(command: str | None = None):
     for k, v in _commands.items():
         desc = inspect.getdoc(v)
         print(k, '-', desc.splitlines()[0] if desc is not None else '無說明。')
+
 
 @command('exit')
 def exit():

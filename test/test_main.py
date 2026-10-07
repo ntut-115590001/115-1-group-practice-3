@@ -1,6 +1,6 @@
 import unittest
 from io import StringIO
-from unittest.mock import Mock, call, patch
+from unittest.mock import MagicMock, call, patch
 
 from src.cli import Result
 from src.main import main
@@ -18,25 +18,25 @@ def _run(line: str):
 @patch('src.cli.run', side_effect=_run)
 class MainTests(unittest.TestCase):
     @patch('sys.stdin', StringIO('test\nAny thing\nexit\nother\n'))
-    def test_exit_command(self, run: Mock, save_all: Mock):
+    def test_exit_command(self, run: MagicMock, save_all: MagicMock):
         main()
         self.assertEqual(run.call_args_list, [call('test'), call('Any thing'), call('exit')])
         save_all.assert_called_once()
 
     @patch('sys.stdin', StringIO('test\nAny thing\n'))
-    def test_EOF(self, run: Mock, save_all: Mock):
+    def test_EOF(self, run: MagicMock, save_all: MagicMock):
         main()
         self.assertEqual(run.call_args_list, [call('test'), call('Any thing')])
         save_all.assert_called_once()
 
     @patch('sys.stdin', StringIO('test\nAny thing\nCtrl\nnever\n'))
-    def test_ctrl(self, run: Mock, save_all: Mock):
+    def test_ctrl(self, run: MagicMock, save_all: MagicMock):
         main()
         self.assertEqual(run.call_args_list, [call('test'), call('Any thing'), call('Ctrl')])
         save_all.assert_called_once()
 
     @patch('sys.stdin', StringIO('test\nAny thing\nraise\nno\n'))
-    def test_internal(self, run: Mock, save_all: Mock):
+    def test_internal(self, run: MagicMock, save_all: MagicMock):
         self.assertRaisesRegex(Exception, 'Custom', main)
         self.assertEqual(run.call_args_list, [call('test'), call('Any thing'), call('raise')])
         save_all.assert_called_once()

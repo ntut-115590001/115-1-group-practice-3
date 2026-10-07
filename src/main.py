@@ -9,13 +9,13 @@ def main():
         while True:
             try:
                 result = cli.run(input('> '))
-                if result == cli.Result.EXIT: # > exit
+                if result == cli.Result.EXIT:  # > exit
                     break
-            except KeyboardInterrupt: # Ctrl+C
+            except KeyboardInterrupt:  # Ctrl+C
                 print()
                 print('退出系統！')
                 break
-            except EOFError: # Ctrl+Z
+            except EOFError:  # Ctrl+Z
                 print('退出系統！')
                 break
     finally:

@@ -1,7 +1,7 @@
 # pyright: reportPrivateUsage = false
 import unittest
 from io import StringIO
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, patch
 
 from src import cli
 
@@ -69,7 +69,7 @@ class TestCli(unittest.TestCase):
                 pass # pragma: no cover
 
     def test_execute(self):
-        mock = Mock(return_value = None)
+        mock = MagicMock(return_value = None)
         @cli.command('foo-bar')
         def foo_bar(arg: str):
             return mock(arg)
@@ -78,10 +78,13 @@ class TestCli(unittest.TestCase):
         self.assertRaises(cli.CommandError, cli.execute, 'foo-bar')
         self.assertIs(cli.Result.SUCCESS, cli.execute('foo-bar content'))
         mock.assert_called_once_with('content')
+        mock.reset_mock()
         self.assertIs(cli.Result.SUCCESS, cli.execute(r"""foo-bar "con\"tent" """))
-        mock.assert_called_with(r'con"tent')
+        mock.assert_called_once_with(r'con"tent')
+        mock.reset_mock()
         self.assertIs(cli.Result.SUCCESS, cli.execute(r"""foo-bar 'con\\"tent'"""))
-        mock.assert_called_with(r'con\\"tent')
+        mock.assert_called_once_with(r'con\\"tent')
+        mock.reset_mock()
         mock.return_value = cli.Result.EXIT
         self.assertIs(cli.Result.EXIT, cli.execute('foo-bar ~'))
         mock.side_effect = cli.CommandError
