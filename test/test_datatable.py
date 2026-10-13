@@ -11,17 +11,16 @@ from src.datatable import Datatable
 
 
 @dataclass
-class Person:
+class Person(datatable.Datarow):
     name: str
     age: int
 
+    @classmethod
+    def serialize(cls, fields: list[str]) -> 'Person':
+        return cls(fields[0], int(fields[1]))
 
-def person_from_row(fields: list[str]) -> Person:
-    return Person(fields[0], int(fields[1]))
-
-
-def person_to_row(person: Person) -> list[str]:
-    return [person.name, str(person.age)]
+    def unserialize(self) -> list[str]:
+        return [self.name, str(self.age)]
 
 
 class DatatableTests(unittest.TestCase):
@@ -40,7 +39,7 @@ class DatatableTests(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def make_table(self, name: str = 'people') -> Datatable[Person]:
-        return Datatable(name, person_from_row, person_to_row)
+        return Datatable(name, Person)
 
     def test_new_table(self):
         table = self.make_table()

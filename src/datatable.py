@@ -1,32 +1,39 @@
 """Implement Datatable for writing and reading data that should be stored on the disk."""
 
+from abc import abstractmethod
 import csv
-from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol, Self
 
 from src.cli import CommandError, command
 
 DATAPATH = Path('data')
 
 
-class Datatable[T](dict[str, T]):
+class Datarow(Protocol):
+    """Protocol for data row objects that can be stored in a Datatable."""
+    @classmethod
+    @abstractmethod
+    def serialize(cls, fields: list[str]) -> Self: ...
+
+    @abstractmethod
+    def unserialize(self) -> list[str]: ...
+
+class Datatable[T: Datarow](dict[str, T]):
     """Represent the dictionary associated with a CSV file."""
     datatables: dict[str, Datatable[Any]] = {}
 
     def __init__(
         self,
         name: str,
-        from_row: Callable[[list[str]], T],
-        to_row: Callable[[T], list[str]]
+        row_type: type[T]
     ) -> None:
         """Create a Datatable with associated CSV filename and field mapping names."""
         if name in self.datatables:
             raise ValueError(f"Datatable already exists: {name}")
         self.name = name
         self.path = DATAPATH / (name + '.csv')
-        self.from_row = from_row
-        self.to_row = to_row
+        self.row_type = row_type
         super().__init__()
         if self.path.exists():
             self.load()
@@ -36,15 +43,15 @@ class Datatable[T](dict[str, T]):
         """Load data from the associated CSV file on the disk."""
         self.clear()
         with self.path.open('r', newline='') as csvFile:
-            self.update({fields[0]: self.from_row(fields[1:]) for fields in csv.reader(csvFile)})
+            self.update({fields[0]: self.row_type.serialize(fields[1:]) for fields in csv.reader(csvFile)})
 
     def save(self) -> None:
         """Save data into the associated CSV file on the disk."""
         DATAPATH.mkdir(exist_ok= True)
         with self.path.open('w', newline='') as csvFile:
             writer = csv.writer(csvFile)
-            for id, values in self.items():
-                writer.writerow([id] + self.to_row(values))
+            for id, value in self.items():
+                writer.writerow([id] + value.unserialize())
 
     @classmethod
     def save_all(cls) -> None:
