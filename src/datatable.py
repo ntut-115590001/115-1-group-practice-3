@@ -23,11 +23,7 @@ class Datatable[T: Datarow](dict[str, T]):
     """Represent the dictionary associated with a CSV file."""
     datatables: dict[str, Datatable[Any]] = {}
 
-    def __init__(
-        self,
-        name: str,
-        row_type: type[T]
-    ) -> None:
+    def __init__(self, name: str, row_type: type[T]) -> None:
         """Create a Datatable with associated CSV filename and field mapping names."""
         if name in self.datatables:
             raise ValueError(f"Datatable already exists: {name}")
@@ -35,13 +31,13 @@ class Datatable[T: Datarow](dict[str, T]):
         self.path = DATAPATH / (name + '.csv')
         self.row_type = row_type
         super().__init__()
-        if self.path.exists():
-            self.load()
         self.datatables[self.name] = self
 
     def load(self) -> None:
         """Load data from the associated CSV file on the disk."""
         self.clear()
+        if not self.path.exists():
+            return
         with self.path.open('r', newline='') as csvFile:
             self.update({fields[0]: self.row_type.serialize(fields[1:]) for fields in csv.reader(csvFile)})
 
@@ -58,6 +54,12 @@ class Datatable[T: Datarow](dict[str, T]):
         """Save all registered Datatable."""
         for table in cls.datatables.values():
             table.save()
+
+    @classmethod
+    def load_all(cls) -> None:
+        """Load all registered Datatable."""
+        for table in cls.datatables.values():
+            table.load()
 
 
 @command('datatable')
@@ -76,30 +78,37 @@ def datatable(action: str, tablename: str | None = None) -> None:
     """
     if not action in ('list', 'print', 'save', 'reload'):
         raise CommandError(f'未知操作：{action}！')
+
     if action == 'list':
         if tablename is not None:
             raise CommandError('datatable list 不接受額外參數！')
         print('存在以下資料表：')
-        print(', '.join([*Datatable.datatables.keys()]))
+        print(', '.join(Datatable.datatables.keys()) if Datatable.datatables else '無資料表。')
         return
 
     if tablename is not None and tablename not in Datatable.datatables:
         raise CommandError(f'資料表 {tablename} 不存在！')
 
-    datatables = ([Datatable.datatables[tablename]]
-                  if tablename is not None
-                  else [*Datatable.datatables.values()])
-
     if action == 'print':
         if not tablename:
             raise CommandError('資料表未指定！')
-        print(datatables[0])
-        return
-
-    for table in datatables:
+        print(f'資料表 {tablename} 內容：')
+        print(Datatable.datatables[tablename])
+    elif action == 'reload':
         try:
-            table.load() if action == 'reload' else table.save()
+            if not tablename:
+                Datatable.load_all()
+            else:
+                Datatable.datatables[tablename].load()
         except Exception as err:
-            raise CommandError(f'資料表 {table.name} 讀寫失敗：{err}') from err
-        else:
-            print(f'成功讀寫資料表 {table.name}。')
+            raise CommandError(f'載入失敗：{err}') from err
+        print(f'成功載入資料表。')
+    elif action == 'save':
+        try:
+            if not tablename:
+                Datatable.save_all()
+            else:
+                Datatable.datatables[tablename].save()
+        except Exception as err:
+            raise CommandError(f'儲存失敗：{err}') from err
+        print(f'成功儲存資料表。')

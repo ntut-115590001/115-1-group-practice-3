@@ -51,14 +51,7 @@ class DatatableTests(unittest.TestCase):
 
         self.assertRaisesRegex(ValueError, 'people', self.make_table)
 
-    def test_existing_csv(self):
-        (self.data_path / 'people.csv').write_text('1,Ada,36\n2,Bob,42\n')
-
-        table = self.make_table()
-
-        self.assertEqual(table, {'1': Person('Ada', 36), '2': Person('Bob', 42)})
-
-    def test_load_replaces_existing_data(self):
+    def test_load(self):
         table = self.make_table()
         table['old'] = Person('Old', 1)
         (self.data_path / 'people.csv').write_text('1,Ada,36\n2,Bob,42\n')
@@ -68,7 +61,8 @@ class DatatableTests(unittest.TestCase):
         self.assertEqual(table, {'1': Person('Ada', 36), '2': Person('Bob', 42)})
 
         (self.data_path / 'people.csv').unlink()
-        self.assertRaises(FileNotFoundError, table.load)
+        table.load()
+        self.assertEqual(table, {})
 
     def test_save(self):
         table = self.make_table()
@@ -90,6 +84,18 @@ class DatatableTests(unittest.TestCase):
         self.assertRaises(KeyError, lambda: table['3'])
         del table['1']
         self.assertNotIn('1', table)
+
+    def test_load_all(self):
+        (self.data_path / 'first.csv').write_text('1,A,36\n')
+        (self.data_path / 'second.csv').write_text('')
+        first = self.make_table('first')
+        second = self.make_table('second')
+        second.update({'1': Person('B', 42)})
+
+        Datatable.load_all()
+
+        self.assertEqual(first, {'1': Person('A', 36)})
+        self.assertEqual(second, {})
 
     def test_save_all(self):
         (self.data_path / 'first.csv').write_text('1,A,36\n')
@@ -166,7 +172,7 @@ class DatatableTests(unittest.TestCase):
 
         (self.data_path / 'second.csv').write_text('')
         self.assertRaises(cli.CommandError, datatable.datatable, 'reload', 'nonexistent')
-        self.assertRaises(cli.CommandError, datatable.datatable, 'reload', 'first')
+        self.assertIs(datatable.datatable('reload', 'first'), cli.Result.SUCCESS)
         self.assertIs(datatable.datatable('reload', 'second'), cli.Result.SUCCESS)
 
     def test_command_other(self):

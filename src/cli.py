@@ -5,10 +5,12 @@ import inspect
 import shlex
 from collections.abc import Callable
 from enum import Enum, auto
+from traceback import print_exception
 from typing import ParamSpec
 
 
 _commands: dict[str, Callable[..., Result]] = {}
+_verbose = False
 
 
 class Result(Enum):
@@ -70,6 +72,8 @@ def run(line: str) -> Result:
         return execute(line)
     except CommandError as err:
         print(f'\033[91m錯誤！{err}\033[0m')
+        if _verbose:
+            print_exception(err)
         return Result.FAIL
 
 
@@ -95,3 +99,14 @@ def exit():
     """退出系統，無參數。"""
     print('退出系統！')
     return Result.EXIT
+
+
+@command('verbose')
+def verbose():
+    """切換詳細模式，無參數。
+
+    詳細模式下，將輸出更多的除錯訊息。
+    """
+    global _verbose
+    _verbose = not _verbose
+    print(f'詳細模式已{"啟用" if _verbose else "關閉"}。')

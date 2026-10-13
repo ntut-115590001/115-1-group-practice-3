@@ -4,6 +4,7 @@ from src import cli
 from src.datatable import Datatable
 
 def main():
+    Datatable.load_all()
     print('歡迎使用本系統！輸入 help 以取得指令清單。')
     try:
         while True:
