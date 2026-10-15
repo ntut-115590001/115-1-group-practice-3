@@ -10,9 +10,11 @@ class TestCli(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.commands = cli._commands.copy()
+        cli._verbose = False
 
     def tearDown(self):
         cli._commands = TestCli.commands.copy()
+        cli._verbose = False
 
     def test_command_wrap(self):
         @cli.command('zero')
@@ -95,18 +97,33 @@ class TestCli(unittest.TestCase):
         self.assertIs(cli.Result.NONE, cli.execute(''))
         self.assertIs(cli.Result.NONE, cli.execute('  \t '))
 
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_run(self, mock_stdout: StringIO):
+    def test_run(self):
         @cli.command('example')
         def example(err: str | None = None):
-            if err == 'true':
+            if err == 'a':
                 raise cli.CommandError('custom error!')
-            elif err is not None:
-                [][1]
-        self.assertIs(cli.Result.FAIL, cli.run('example true'))
-        self.assertIn('custom error!', mock_stdout.getvalue())
+            elif err == 'b':
+                raise cli.CommandError('custom error2!') from ValueError('inner error!')
+            elif err == 'c':
+                raise ValueError('inner error!')
+
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            self.assertIs(cli.Result.FAIL, cli.run('example a'))
+            self.assertIn('custom error!', mock_stdout.getvalue())
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            self.assertIs(cli.Result.FAIL, cli.run('example b'))
+            self.assertIn('custom error2!', mock_stdout.getvalue())
+            self.assertNotIn('inner error!', mock_stdout.getvalue())
+
+        self.assertRaises(ValueError, cli.run, 'example c')
         self.assertIs(cli.Result.SUCCESS, cli.run('example'))
-        self.assertRaises(IndexError, cli.run, 'example false')
+
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            cli.verbose()
+            self.assertIs(cli.Result.FAIL, cli.run('example b'))
+            self.assertIn('custom error2!', mock_stdout.getvalue())
+            self.assertIn('inner error!', mock_stdout.getvalue())
+
 
     def test_help(self):
         @cli.command('cmd-a')
@@ -148,3 +165,13 @@ class TestCli(unittest.TestCase):
     @patch('sys.stdout', new_callable=StringIO)
     def test_exit(self, mock_stdout: StringIO):
         self.assertIs(cli.Result.EXIT, cli.exit())
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_verbose(self, mock_stdout: StringIO):
+        cli._verbose = False
+        self.assertIs(cli.Result.SUCCESS, cli.verbose())
+        self.assertTrue(cli._verbose)
+
+        cli._verbose = True
+        self.assertIs(cli.Result.SUCCESS, cli.verbose())
+        self.assertFalse(cli._verbose)

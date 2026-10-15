@@ -5,8 +5,8 @@ import inspect
 import shlex
 from collections.abc import Callable
 from enum import Enum, auto
+import sys
 from traceback import print_exception
-from typing import ParamSpec
 
 
 _commands: dict[str, Callable[..., Result]] = {}
@@ -32,8 +32,7 @@ class CommandError(Exception):
     pass
 
 
-P = ParamSpec('P')
-def command(name: str) -> Callable[[Callable[P, Result | None]], Callable[P, Result]]:
+def command[**P](name: str) -> Callable[[Callable[P, Result | None]], Callable[P, Result]]:
     """Register the function as a new command."""
     def decorator(func: Callable[P, Result | None]) -> Callable[P, Result]:
         if name in _commands:
@@ -73,7 +72,7 @@ def run(line: str) -> Result:
     except CommandError as err:
         print(f'\033[91m錯誤！{err}\033[0m')
         if _verbose:
-            print_exception(err)
+            print_exception(err, file=sys.stdout)
         return Result.FAIL
 
 

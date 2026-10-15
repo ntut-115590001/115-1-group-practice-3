@@ -47,7 +47,7 @@ class Datatable[T: Datarow](dict[str, T]):
         with self.path.open('w', newline='') as csvFile:
             writer = csv.writer(csvFile)
             for id, value in self.items():
-                writer.writerow([id] + value.unserialize())
+                writer.writerow([id, *value.unserialize()])
 
     @classmethod
     def save_all(cls) -> None:
@@ -74,7 +74,7 @@ def datatable(action: str, tablename: str | None = None) -> None:
     * datatable save [<名稱>]
       - 將指定或所有資料表儲存至磁碟中。
     * datatable reload [<名稱>]
-      - 從磁碟中載入資料表
+      - 從磁碟中載入指定或所有資料表。
     """
     if not action in ('list', 'print', 'save', 'reload'):
         raise CommandError(f'未知操作：{action}！')
