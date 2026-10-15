@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Self
 
 from src.datatable import Datatable, Datarow
+from src.util import bool_to_str, join_map, split_map
 
 
 @dataclass
@@ -18,6 +19,7 @@ class Class_(Datarow):
 
 class_table = Datatable('class', Class_)
 
+
 @dataclass
 class Course(Datarow):
     name: str
@@ -28,12 +30,13 @@ class Course(Datarow):
 
     @classmethod
     def serialize(cls, fields: list[str]) -> Self:
-        return cls(fields[0], fields[1], fields[2].split(' ') if fields[2] else [], int(fields[3]), fields[4] == '1')
+        return cls(fields[0], fields[1], split_map(fields[2]), int(fields[3]), bool(fields[4]))
 
     def unserialize(self) -> list[str]:
-        return [self.name, self.teacher, ' '.join(self.sections), str(self.credit), '1' if self.required else '0']
+        return [self.name, self.teacher, join_map(self.sections), str(self.credit), bool_to_str(self.required)]
 
 course_table = Datatable('course', Course)
+
 
 @dataclass
 class Student(Datarow):
@@ -44,14 +47,14 @@ class Student(Datarow):
 
     @classmethod
     def serialize(cls, fields: list[str]) -> Self:
-        return cls(fields[0], int(fields[1]), fields[2], fields[3].split(' ') if fields[3] else [])
+        return cls(fields[0], int(fields[1]), fields[2], split_map(fields[3]))
 
     def unserialize(self) -> list[str]:
-        return [self.name, str(self.credit), self.class_id, ' '.join(self.course_ids)]
+        return [self.name, str(self.credit), self.class_id, join_map(self.course_ids)]
 
     @property
     def class_(self) -> Class_ | None:
         return class_table.get(self.class_id)
 
-
 student_table = Datatable('student', Student)
+
