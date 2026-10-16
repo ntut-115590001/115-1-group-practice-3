@@ -14,10 +14,10 @@ class Datarow(Protocol):
     """Protocol for data row objects that can be stored in a Datatable."""
     @classmethod
     @abstractmethod
-    def serialize(cls, fields: list[str]) -> Self: ...
+    def unserialize(cls, fields: list[str]) -> Self: ...
 
     @abstractmethod
-    def unserialize(self) -> list[str]: ...
+    def serialize(self) -> list[str]: ...
 
 class Datatable[T: Datarow](dict[str, T]):
     """Represent the dictionary associated with a CSV file."""
@@ -39,7 +39,7 @@ class Datatable[T: Datarow](dict[str, T]):
         if not self.path.exists():
             return
         with self.path.open('r', newline='') as csvFile:
-            self.update({fields[0]: self.row_type.serialize(fields[1:]) for fields in csv.reader(csvFile)})
+            self.update({fields[0]: self.row_type.unserialize(fields[1:]) for fields in csv.reader(csvFile)})
 
     def save(self) -> None:
         """Save data into the associated CSV file on the disk."""
@@ -47,7 +47,7 @@ class Datatable[T: Datarow](dict[str, T]):
         with self.path.open('w', newline='') as csvFile:
             writer = csv.writer(csvFile)
             for id, value in self.items():
-                writer.writerow([id, *value.unserialize()])
+                writer.writerow([id, *value.serialize()])
 
     @classmethod
     def save_all(cls) -> None:

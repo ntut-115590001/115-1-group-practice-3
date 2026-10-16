@@ -16,10 +16,10 @@ class Person(datatable.Datarow):
     age: int
 
     @classmethod
-    def serialize(cls, fields: list[str]) -> 'Person':
+    def unserialize(cls, fields: list[str]) -> 'Person':
         return cls(fields[0], int(fields[1]))
 
-    def unserialize(self) -> list[str]:
+    def serialize(self) -> list[str]:
         return [self.name, str(self.age)]
 
 
