@@ -11,10 +11,10 @@ class Class_(Datarow):
     credit_limit: int
 
     @classmethod
-    def serialize(cls, fields: list[str]) -> Self:
+    def unserialize(cls, fields: list[str]) -> Self:
         return cls(fields[0], int(fields[1]))
 
-    def unserialize(self) -> list[str]:
+    def serialize(self) -> list[str]:
         return [self.name, str(self.credit_limit)]
 
 class_table = Datatable('class', Class_)
@@ -29,10 +29,10 @@ class Course(Datarow):
     required: bool
 
     @classmethod
-    def serialize(cls, fields: list[str]) -> Self:
+    def unserialize(cls, fields: list[str]) -> Self:
         return cls(fields[0], fields[1], split_map(fields[2]), int(fields[3]), bool(fields[4]))
 
-    def unserialize(self) -> list[str]:
+    def serialize(self) -> list[str]:
         return [self.name, self.teacher, join_map(self.sections), str(self.credit), bool_to_str(self.required)]
 
 course_table = Datatable('course', Course)
@@ -46,10 +46,10 @@ class Student(Datarow):
     course_ids: list[str]
 
     @classmethod
-    def serialize(cls, fields: list[str]) -> Self:
+    def unserialize(cls, fields: list[str]) -> Self:
         return cls(fields[0], int(fields[1]), fields[2], split_map(fields[3]))
 
-    def unserialize(self) -> list[str]:
+    def serialize(self) -> list[str]:
         return [self.name, str(self.credit), self.class_id, join_map(self.course_ids)]
 
     @property
