@@ -96,11 +96,10 @@ def course_add(code: str, name: str, credit: str, teachers: str,
                            section_list, limit_n)
     print(f'已新增課程 {code}。')
 
-    DAY_NAMES = {'1': 'Mon', '2': 'Tue', '3': 'Wed', '4': 'Thu',
-             '5': 'Fri', '6': 'Sat', '7': 'Sun'}
 
 DAY_NAMES = {'1': 'Mon', '2': 'Tue', '3': 'Wed', '4': 'Thu',
              '5': 'Fri', '6': 'Sat', '7': 'Sun'}
+
 
 def format_time(time: str) -> str:
     """'13' -> 'Mon 3'"""
