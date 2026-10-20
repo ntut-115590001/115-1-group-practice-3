@@ -25,7 +25,7 @@ class Course:
     name: str
     credit: int
     teachers: list[str]
-    sections: list[tuple[list[str], str]]   # [(horarios, aula), ...]
+    sections: list[tuple[list[str], str]]  
     student_limit: int
 
     @classmethod
@@ -55,7 +55,6 @@ PERIODS = '123456789abc'
 
 
 def check_time(time: str) -> bool:
-    """'13' -> True (lunes, periodo 3); '8a' -> False (día inválido)"""
     return len(time) == 2 and time[0] in DAYS and time[1] in PERIODS
 
 
@@ -122,16 +121,22 @@ def print_course(code: str, course: Course) -> None:
 
 @command('course_query')
 def course_query(field: str | None = None, value: str | None = None) -> None:
-    """查詢課程。語法：course_query [code|teacher|day <值>]
+    """查詢課程。語法：course_query [(code|teacher|day|seats|required|elective) <值>]
 
-    不帶參數時列出所有課程。day 為星期 1-7。
+    不帶參數時列出所有課程。
+    code <課號>：依課號查詢。
+    teacher <教師>：依授課教師查詢。
+    day <1-7>：依星期查詢。
+    seats <N>：剩餘名額不少於 N 的課程。
+    required <系級代號>：該系級的必修課。
+    elective <系級代號>：該系級的選修課。
     """
     if field is None:
         found = list(courses.items())
     elif value is None:
         raise CommandError('請提供查詢值！')
     elif field == 'code':
-        found = [(c, x) for c, x in courses.items() if c == value]
+        found = [(value, courses[value])] if value in courses else []
     elif field == 'teacher':
         found = [(c, x) for c, x in courses.items() if value in x.teachers]
     elif field == 'day':
@@ -162,6 +167,7 @@ def course_query(field: str | None = None, value: str | None = None) -> None:
     print()
     for code, course in found:
         print_course(code, course)
+
 
 @dataclass
 class Student:
@@ -198,7 +204,6 @@ classes = Datatable('class', ClassGroup)
 
 
 def enrolled_count(course_code: str) -> int:
-    """Cuántos estudiantes tienen este curso."""
     return sum(course_code in s.course_ids for s in students.values())
 
 
@@ -220,7 +225,7 @@ def student_add(student_id: str, name: str, class_ids: str,
         if c not in courses:
             raise CommandError(f'課程 {c} 不存在！')
         if enrolled_count(c) >= courses[c].student_limit:
-            raise CommandError(f'課程 {c} 已額滿！')
+            raise CommandError(f'課程 {c} 已額滿    ！')
     students[student_id] = Student(name, class_list, course_list)
     print(f'已新增學生 {student_id}。')
 
@@ -238,6 +243,7 @@ def course_delete(code: str) -> None:
         raise CommandError(f'課程 {code} 已有 {count} 位學生選修，不能刪除！')
     del courses[code]
     print(f'已刪除課程 {code}。')
+
 
 def parse_credit(text: str) -> int:
     try:
@@ -339,6 +345,7 @@ def student_delete(student_id: str) -> None:
     del students[student_id]
     print(f'已刪除學生 {student_id}。')
 
+
 @command('class_add')
 def class_add(class_id: str, name: str, credit_limit: str,
               required: str = '') -> None:
@@ -380,6 +387,8 @@ def class_query(class_id: str | None = None) -> None:
         print(f'Credit limit: {c.credit_limit}')
         print(f'Required courses: {", ".join(c.required_course_ids)}')
         print()
+
+
 @command('student_modify')
 def student_modify(student_id: str, field: str, value: str) -> None:
     """修改學生。語法：student_modify <學號> <欄位> <新值>
@@ -402,10 +411,54 @@ def student_modify(student_id: str, field: str, value: str) -> None:
         for c in course_list:
             if c not in courses:
                 raise CommandError(f'課程 {c} 不存在！')
-            if c not in student.course_ids and \
-                    enrolled_count(c) >= courses[c].student_limit:
+            if (c not in student.course_ids and
+                    enrolled_count(c) >= courses[c].student_limit):
                 raise CommandError(f'課程 {c} 已額滿！')
         student.course_ids = course_list
     else:
         raise CommandError(f'未知欄位：{field}')
     print(f'已修改學生 {student_id}。')
+
+
+@command('class_modify')
+def class_modify(class_id: str, field: str, value: str) -> None:
+    """修改系級。語法：class_modify <系級代號> <欄位> <新值>
+
+    欄位：name、credit_limit、required（必修課程以逗號分隔）。
+    """
+    if class_id not in classes:
+        raise CommandError(f'系級 {class_id} 不存在！')
+    group = classes[class_id]
+    if field == 'name':
+        group.name = value
+    elif field == 'credit_limit':
+        group.credit_limit = parse_credit(value)
+    elif field == 'required':
+        required_list = split_map(value, sep=',')
+        for c in required_list:
+            if c not in courses:
+                raise CommandError(f'課程 {c} 不存在！')
+        group.required_course_ids = required_list
+    else:
+        raise CommandError(f'未知欄位：{field}')
+    print(f'已修改系級 {class_id}。')
+
+
+@command('class_delete')
+def class_delete(class_id: str) -> None:
+    """刪除系級。語法：class_delete <系級代號>
+
+    仍有學生隸屬的系級不能刪除。
+    """
+    if class_id not in classes:
+        raise CommandError(f'系級 {class_id} 不存在！')
+    members = [sid for sid, s in students.items() if class_id in s.class_ids]
+    if members:
+        raise CommandError(f'系級 {class_id} 仍有 {len(members)} 位學生，不能刪除！')
+    del classes[class_id]
+    print(f'已刪除系級 {class_id}。')
+
+    def test_delete_class(self):
+        self.add_class('CS1')
+        f1.class_delete('CS1')
+        self.assertNotIn('CS101', f1.courses)
