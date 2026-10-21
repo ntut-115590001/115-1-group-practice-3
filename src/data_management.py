@@ -25,7 +25,7 @@ class Course:
     name: str
     credit: int
     teachers: list[str]
-    sections: list[tuple[list[str], str]]  
+    sections: list[tuple[list[str], str]]
     student_limit: int
 
     @classmethod
@@ -225,7 +225,7 @@ def student_add(student_id: str, name: str, class_ids: str,
         if c not in courses:
             raise CommandError(f'課程 {c} 不存在！')
         if enrolled_count(c) >= courses[c].student_limit:
-            raise CommandError(f'課程 {c} 已額滿    ！')
+            raise CommandError(f'課程 {c} 已額滿！')
     students[student_id] = Student(name, class_list, course_list)
     print(f'已新增學生 {student_id}。')
 
