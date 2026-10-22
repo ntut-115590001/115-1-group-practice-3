@@ -457,8 +457,3 @@ def class_delete(class_id: str) -> None:
         raise CommandError(f'系級 {class_id} 仍有 {len(members)} 位學生，不能刪除！')
     del classes[class_id]
     print(f'已刪除系級 {class_id}。')
-
-    def test_delete_class(self):
-        self.add_class('CS1')
-        f1.class_delete('CS1')
-        self.assertNotIn('CS101', f1.courses)
