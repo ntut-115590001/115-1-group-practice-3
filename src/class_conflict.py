@@ -3,8 +3,8 @@
 from data_management import students, courses, classes, format_time, enrolled_count
 from src.cli import command
 
-## 目前已選課程 already enrolled courses and sections
 def get_enrolledinfo(student_id):
+    """目前已選課程 already enrolled courses and sections """
     enrolled_courses = []
     enrolled_sections = []
     current_credit = 0
@@ -18,14 +18,14 @@ def get_enrolledinfo(student_id):
     return current_credit, enrolled_courses, enrolled_sections
 
 
-## 時段衝堂 section conflict check
 def check_section_conflict(desired_section, enrolled_courses, enrolled_sections):
+    """時段衝堂 section conflict check"""
     section_conflict = []
-    for i in range(len(enrolled_sections)): #checks each list of enrolled_sections
-        for p in enrolled_sections[i]: #each value in sections[i]. day1period1, day1period2 
+    for section in range(len(enrolled_sections)):
+        for enrolled_time in enrolled_sections[section]:
             for times, room in desired_section:
-                if p in times: #desired_section taken?
-                    conflict = [format_time(p), enrolled_courses[i]]
+                if enrolled_time in times: #desired_section taken?
+                    conflict = [format_time(enrolled_time), enrolled_courses[section]]
                     
                     if conflict not in section_conflict:
                         section_conflict.append(conflict)
@@ -33,24 +33,40 @@ def check_section_conflict(desired_section, enrolled_courses, enrolled_sections)
     return section_conflict
 
 
-## 學分限制 credit limit check
 def check_credit_limit(student_info, current_credit, desired_credit):
-    credit_conflict = False
+    """學分限制 credit limit check"""
+    credit_conflict = []
     student_class_id = student_info.class_ids[0]
     student_class = classes[student_class_id]
     if current_credit + desired_credit > student_class.credit_limit:
-        credit_conflict = True
+        credit_conflict = [-1]
 
     return credit_conflict, student_class
 
 
-## 人數限制 student limit check 
 def check_student_limit(desired_course, desired_courseid):
-    stu_limit_conflict = False
+    """人數限制 student limit check"""
+    stu_limit_conflict = []
     if desired_course.student_limit - enrolled_count(desired_courseid) <= 0:
-        stu_limit_conflict = True
+        stu_limit_conflict = [-1]
 
     return stu_limit_conflict
+
+
+def conflict_details(conflicts):
+    """解釋衝突 explain conflicts"""
+    issue_number = 0
+    if conflicts[0]:
+        for section in conflicts[0]:
+            issue_number += 1
+            print("衝突", issue_number, "：", section[0])
+            print("已選課程：", section[1])
+    if conflicts[1]:
+        issue_number += 1
+        print("衝突", issue_number, "：加選後總學分超過上限")         
+    if conflicts[2]:
+        issue_number += 1
+        print("衝突", issue_number, "：加選課程已額滿")
 
 
 @command('student_addCourse')
@@ -68,23 +84,10 @@ def student_addCourse():
     credit_conflict, student_class = check_credit_limit(student_info, current_credit, desired_credit)
     stu_limit_conflict = check_student_limit(desired_course, desired_courseid)
 
-    ## 選課結果 result
-    if section_conflict != [] or credit_conflict == True or stu_limit_conflict == True:
-        issue_number = 0
-        print("選課結果：失敗")
-
-        if section_conflict != []:
-            for i in section_conflict:
-                issue_number += 1
-                print("衝突", issue_number, "：", i[0])
-                print("已選課程：", i[1])
-        if credit_conflict == True:
-            issue_number += 1
-            print("衝突", issue_number, "：加選後總學分超過上限")         
-        if stu_limit_conflict == True:
-            issue_number += 1
-            print("衝突", issue_number, "：加選課程已額滿")
-    
+    """選課結果 result"""
+    if section_conflict or credit_conflict or stu_limit_conflict:
+        conflicts = [section_conflict, credit_conflict, stu_limit_conflict]
+        conflict_details(conflicts)
     else:
         print("選課結果：成功")
 
