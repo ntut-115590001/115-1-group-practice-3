@@ -1,0 +1,87 @@
+"""F5: Multi-Condition Course Selection and Feasibility Check. 多條件課程篩選與可行性檢查"""
+
+from data_management import courses, enrolled_count
+
+
+def get_unavailable_sections(unavail_period, desired_day):
+    unavail_day = [] #get unavailable days
+    for day in range(1,8):
+        if str(day) not in desired_day:
+            unavail_day.append(str(day))
+
+    unavail_sections = [] #create combinations of the unavailable days/periods
+    for day in unavail_day:
+        for period in unavail_period:
+            unavail_sections.append(str(day)+str(period))
+
+    return unavail_sections
+
+
+def get_candidate_courses(unavail_sections):
+    candidate_courses = [] #list of all candidate courses that meet requirements^. [[courseinfo1],[info2],[info3],...]
+    for course_id, course in courses.items(): #finds courses in AVAIL SECTIONS * NOT FULL
+        section_conflict = False
+        for times, room in course.sections:
+            for section in times:
+                if section in unavail_sections:
+                    section_conflict = True
+                    break
+            if section_conflict == True:
+                break
+        if (section_conflict == False) and ((course.student_limit-enrolled_count(course_id)) > 0):
+            if [course_id, course.name, course.credit, course.sections] not in candidate_courses:
+                candidate_courses.append([course_id, course.name, course.credit, course.sections])
+
+    return candidate_courses
+
+
+explanation = []
+def check_specific_course(courses_list): #check specific desired/required courses
+    valid_courses = []
+
+    for course_id in courses_list:
+        course = courses[course_id]
+        section_conflict = False
+
+        for times, room in course.sections:
+            for section in times:
+                if section in unavail_sections:
+                    section_conflict = True
+
+        if section_conflict:
+            explanation.append(course.name + ": Undesired Day/Period")
+        elif enrolled_count(course_id) >= course.student_limit:
+            explanation.append(course.name + ": Student Limit Reached")
+        else:
+            valid_courses.append([course_id, course.name, course.credit, course.sections])
+
+    return valid_courses
+
+############################################################# main
+
+def select_requirements():
+    desired_courses = input("Desired Course ID(s): ").split(" ")
+    required_courses = input("Required Course ID(s): ").split(" ")
+    min_credits = int(input("Minimum Credits: "))
+    max_credits = int(input("Maximum Credits: "))
+    unavail_period = input("Unavailable Period(s): ").split(" ") #[XY] period is Y
+    desired_day  = input("Desired Day(s): ").split(" ") #this is the X^
+
+    specific_courses = set(desired_courses + required_courses)
+
+    unavail_sections = get_unavailable_sections(unavail_period, desired_day)
+
+    candidate_courses = get_candidate_courses(unavail_sections)
+    for course in check_specific_course(specific_courses): #add valid desired/required courses
+        if course[0] not in [candidate[0] for candidate in candidate_courses]:
+            candidate_courses.append(course)
+
+
+#################################################### WIP
+candidate_credits = 0
+for candidates in candidate_courses:
+    print(candidates)
+    candidate_credits += candidates[2]
+print("Total Credits from above: ", candidate_credits)
+if candidate_credits not in range(min_credits, max_credits+1):
+    print("Credits do not meet requirements.")
