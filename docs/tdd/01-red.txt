@@ -1,0 +1,1 @@
+Red: test_commute_weight_reverses_the_winner failed because schedule_search was not yet registered.
