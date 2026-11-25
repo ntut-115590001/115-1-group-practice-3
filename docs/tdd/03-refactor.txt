@@ -1,0 +1,87 @@
+test_command_register (test.test_cli.TestCli.test_command_register) ... ok
+test_command_wrap (test.test_cli.TestCli.test_command_wrap) ... ok
+test_execute (test.test_cli.TestCli.test_execute) ... ok
+test_exit (test.test_cli.TestCli.test_exit) ... ok
+test_help (test.test_cli.TestCli.test_help) ... ok
+test_run (test.test_cli.TestCli.test_run) ... ok
+test_verbose (test.test_cli.TestCli.test_verbose) ... ok
+test_add_course (test.test_data_management.TestDataManagement.test_add_course) ... ok
+test_add_course_errors (test.test_data_management.TestDataManagement.test_add_course_errors) ... ok
+test_class_and_student_query (test.test_data_management.TestDataManagement.test_class_and_student_query) ... ok
+test_class_delete_errors (test.test_data_management.TestDataManagement.test_class_delete_errors) ... ok
+test_class_errors (test.test_data_management.TestDataManagement.test_class_errors) ... ok
+test_course_full_in_modify (test.test_data_management.TestDataManagement.test_course_full_in_modify) ... ok
+test_delete_class (test.test_data_management.TestDataManagement.test_delete_class) ... ok
+test_delete_course (test.test_data_management.TestDataManagement.test_delete_course) ... ok
+test_delete_course_errors (test.test_data_management.TestDataManagement.test_delete_course_errors) ... ok
+test_delete_student_frees_seats (test.test_data_management.TestDataManagement.test_delete_student_frees_seats) ... ok
+test_limit_equal_to_enrolled (test.test_data_management.TestDataManagement.test_limit_equal_to_enrolled) ... ok
+test_minimum_values (test.test_data_management.TestDataManagement.test_minimum_values) ... ok
+test_modify_class (test.test_data_management.TestDataManagement.test_modify_class) ... ok
+test_modify_course (test.test_data_management.TestDataManagement.test_modify_course) ... ok
+test_modify_course_errors (test.test_data_management.TestDataManagement.test_modify_course_errors) ... ok
+test_modify_student (test.test_data_management.TestDataManagement.test_modify_student) ... ok
+test_query_errors (test.test_data_management.TestDataManagement.test_query_errors) ... ok
+test_query_filters (test.test_data_management.TestDataManagement.test_query_filters) ... ok
+test_remaining_seats (test.test_data_management.TestDataManagement.test_remaining_seats) ... ok
+test_required_and_elective_query (test.test_data_management.TestDataManagement.test_required_and_elective_query) ... ok
+test_seats_query_boundary (test.test_data_management.TestDataManagement.test_seats_query_boundary) ... ok
+test_serialize_roundtrip (test.test_data_management.TestDataManagement.test_serialize_roundtrip) ... ok
+test_student_add_to_full_course (test.test_data_management.TestDataManagement.test_student_add_to_full_course) ... ok
+test_student_errors (test.test_data_management.TestDataManagement.test_student_errors) ... ok
+test_time_boundaries (test.test_data_management.TestDataManagement.test_time_boundaries) ... ok
+test_command_datatable_list (test.test_datatable.DatatableTests.test_command_datatable_list) ... ok
+test_command_datatable_print (test.test_datatable.DatatableTests.test_command_datatable_print) ... ok
+test_command_datatable_reload (test.test_datatable.DatatableTests.test_command_datatable_reload) ... ok
+test_command_datatable_save (test.test_datatable.DatatableTests.test_command_datatable_save) ... ok
+test_command_other (test.test_datatable.DatatableTests.test_command_other) ... ok
+test_dictionary_operations (test.test_datatable.DatatableTests.test_dictionary_operations) ... ok
+test_load (test.test_datatable.DatatableTests.test_load) ... ok
+test_load_all (test.test_datatable.DatatableTests.test_load_all) ... ok
+test_new_table (test.test_datatable.DatatableTests.test_new_table) ... ok
+test_save (test.test_datatable.DatatableTests.test_save) ... ok
+test_save_all (test.test_datatable.DatatableTests.test_save_all) ... ok
+test_all_subsets_credit_endpoints_ties_and_duplicate_ids (test.test_f7.SearchTests.test_all_subsets_credit_endpoints_ties_and_duplicate_ids) ... ok
+test_commute_weight_reverses_the_winner (test.test_f7.SearchTests.test_commute_weight_reverses_the_winner) ... ok
+test_conflicts_between_two_electives (test.test_f7.SearchTests.test_conflicts_between_two_electives) ... ok
+test_empty_schedule_and_no_candidates (test.test_f7.SearchTests.test_empty_schedule_and_no_candidates) ... ok
+test_impossible_required_or_credit_bounds (test.test_f7.SearchTests.test_impossible_required_or_credit_bounds) ... ok
+test_individual_metrics_multiple_days_and_letter_periods (test.test_f7.SearchTests.test_individual_metrics_multiple_days_and_letter_periods) ... ok
+test_invalid_arguments (test.test_f7.SearchTests.test_invalid_arguments) ... ok
+test_optional_conflicts_second_meeting_blocked_or_full (test.test_f7.SearchTests.test_optional_conflicts_second_meeting_blocked_or_full) ... ok
+test_EOF (test.test_main.MainTests.test_EOF) ... ok
+test_ctrl (test.test_main.MainTests.test_ctrl) ... ok
+test_exit_command (test.test_main.MainTests.test_exit_command) ... ok
+test_internal (test.test_main.MainTests.test_internal) ... ok
+test_build_schedule_marks_every_slot (test.test_schedule.TestSchedule.test_build_schedule_marks_every_slot) ... ok
+test_conflict_is_shown_not_hidden (test.test_schedule.TestSchedule.test_conflict_is_shown_not_hidden) ... ok
+test_conflicts_are_sorted_by_day_and_period (test.test_schedule.TestSchedule.test_conflicts_are_sorted_by_day_and_period) ... ok
+test_course_meeting_several_times_shows_in_all_slots (test.test_schedule.TestSchedule.test_course_meeting_several_times_shows_in_all_slots) ... ok
+test_course_taking_all_periods_of_a_day (test.test_schedule.TestSchedule.test_course_taking_all_periods_of_a_day) ... ok
+test_deleted_course_is_ignored (test.test_schedule.TestSchedule.test_deleted_course_is_ignored) ... ok
+test_empty_schedule (test.test_schedule.TestSchedule.test_empty_schedule) ... ok
+test_first_and_last_slot (test.test_schedule.TestSchedule.test_first_and_last_slot) ... ok
+test_free_blocks_three_consecutive_periods (test.test_schedule.TestSchedule.test_free_blocks_three_consecutive_periods) ... ok
+test_free_command_across_days (test.test_schedule.TestSchedule.test_free_command_across_days) ... ok
+test_free_errors (test.test_schedule.TestSchedule.test_free_errors) ... ok
+test_free_single_period_range (test.test_schedule.TestSchedule.test_free_single_period_range) ... ok
+test_free_whole_day_when_empty (test.test_schedule.TestSchedule.test_free_whole_day_when_empty) ... ok
+test_schedule_errors (test.test_schedule.TestSchedule.test_schedule_errors) ... ok
+test_schedule_filters (test.test_schedule.TestSchedule.test_schedule_filters) ... ok
+test_schedule_prints_grid (test.test_schedule.TestSchedule.test_schedule_prints_grid) ... ok
+test_stats (test.test_schedule.TestSchedule.test_stats) ... ok
+test_two_courses_same_day (test.test_schedule.TestSchedule.test_two_courses_same_day) ... ok
+test_unknown_student (test.test_schedule.TestSchedule.test_unknown_student) ... ok
+test_bool_to_str (test.test_util.TestUtil.test_bool_to_str) ... ok
+test_escape_tab (test.test_util.TestUtil.test_escape_tab) ... ok
+test_split_map_and_join_map (test.test_util.TestUtil.test_split_map_and_join_map) ... ok
+
+----------------------------------------------------------------------
+Ran 77 tests in 0.033s
+
+OK
+Name                      Stmts   Miss Branch BrPart  Cover   Missing
+---------------------------------------------------------------------
+src/optimal_schedule.py      79      0     34      0   100%
+---------------------------------------------------------------------
+TOTAL                        79      0     34      0   100%

@@ -1,1 +1,18 @@
-Red: test_commute_weight_reverses_the_winner failed because schedule_search was not yet registered.
+test_commute_weight_reverses_the_winner (test.test_f7.SearchTests.test_commute_weight_reverses_the_winner) ... FAIL
+
+======================================================================
+FAIL: test_commute_weight_reverses_the_winner (test.test_f7.SearchTests.test_commute_weight_reverses_the_winner)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/77692988f124/project/test/test_f7.py", line 33, in test_commute_weight_reverses_the_winner
+    self.assertEqual(self.run_search(args), [
+                     ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/77692988f124/project/test/test_f7.py", line 28, in run_search
+    self.assertEqual(result, expected, output.getvalue())
+AssertionError: <Result.FAIL: 3> != <Result.SUCCESS: 1> : [91m錯誤！未知指令：schedule_search[0m
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)
