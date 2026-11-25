@@ -1,5 +1,7 @@
 """Implement a easy command-line interface system."""
 
+from __future__ import annotations
+
 import functools
 import inspect
 import shlex

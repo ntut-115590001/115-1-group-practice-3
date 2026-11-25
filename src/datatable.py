@@ -1,5 +1,7 @@
 """Implement Datatable for writing and reading data that should be stored on the disk."""
 
+from __future__ import annotations
+
 from abc import abstractmethod
 import csv
 from pathlib import Path
