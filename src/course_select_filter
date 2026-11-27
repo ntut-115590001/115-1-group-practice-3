@@ -1,0 +1,108 @@
+"""F5: Multi-Condition Course Selection and Feasibility Check. 多條件課程篩選與可行性檢查"""
+
+from data_management import courses, enrolled_count
+
+
+def get_unavailable_sections(unavail_period, desired_day):
+    """取得非偏好的課程時段 obtain unpreferred sections"""
+    unavail_day = []
+    for day in range(1,8):
+        if str(day) not in desired_day:
+            unavail_day.append(str(day))
+
+    unavail_sections = []
+    for day in unavail_day:
+        for period in unavail_period:
+            unavail_sections.append(str(day)+str(period))
+
+    return unavail_sections
+
+
+def get_candidate_courses(unavail_sections):
+    """尋找候選課程 find candidate courses"""
+    candidate_courses = []
+    for course_id, course in courses.items():
+        section_conflict = False
+        for times, room in course.sections:
+            for section in times:
+                if section in unavail_sections:
+                    section_conflict = True
+                    break
+            if section_conflict == True:
+                break
+        if (section_conflict == False) and ((course.student_limit-enrolled_count(course_id)) > 0):
+            if [course_id, course.name, course.credit, course.sections] not in candidate_courses:
+                candidate_courses.append([course_id, course.name, course.credit, course.sections])
+
+    return candidate_courses
+
+
+def check_specific_course(courses_list, unavail_sections, explanation):
+    """查詢希望修習／必修課程 check desired/required courses"""
+    valid_courses = []
+    for course_id in courses_list:
+        if course_id not in courses:
+            explanation.append(course_id + ": Course Not Found")
+            continue
+        course = courses[course_id]
+        section_conflict = False
+
+        for times, room in course.sections:
+            for section in times:
+                if section in unavail_sections:
+                    section_conflict = True
+                    break
+            if section_conflict:
+                break
+
+        if section_conflict:
+            explanation.append(course.name + ": Undesired Day/Period")
+        elif enrolled_count(course_id) >= course.student_limit:
+            explanation.append(course.name + ": Student Limit Reached")
+        else:
+            valid_courses.append([course_id, course.name, course.credit, course.sections])
+
+    return valid_courses, explanation
+
+
+def calculate_candidate_credits(candidate_courses, min_credits, max_credits):
+    """學分相關問題／輸出 credit-related issues/output"""
+    candidate_credits = 0
+    for candidates in candidate_courses:
+        print(candidates)
+        candidate_credits += candidates[2]
+    print("Total Credits Available from Candidate Courses: ", candidate_credits)
+    if candidate_credits < min_credits:
+        print("From the above courses, the total credits do not meet minimum required credits. Please consider making available more days/time.")
+    elif candidate_credits > max_credits:
+        print("From the above courses, the total credit exceeds maximum required credits. Please consider selecting only a necessary amount of courses that do not exceed the maximum credit.")
+
+
+@command('student_courseFilter')
+def student_courseFilter():
+    desired_courses = input("Desired Course ID(s): ").split(" ")
+    required_courses = input("Required Course ID(s): ").split(" ")
+    min_credits = int(input("Minimum Credits: "))
+    max_credits = int(input("Maximum Credits: "))
+    unavail_period = input("Unavailable Period(s): ").split(" ")
+    desired_day  = input("Desired Day(s): ").split(" ")
+
+    specific_courses = set(desired_courses + required_courses)
+    
+    unavail_sections = get_unavailable_sections(unavail_period, desired_day)
+
+    explanation = []
+    candidate_courses = get_candidate_courses(unavail_sections)
+    specific_candidate_courses, explanation = check_specific_course(specific_courses, unavail_sections, explanation)
+    for course in specific_candidate_courses:
+        if course[0] not in [candidate[0] for candidate in candidate_courses]:
+            candidate_courses.append(course)
+    
+    """選課結果 result"""
+    print("Candidate Courses:")
+    for candidate in candidate_courses:
+        print(candidate)
+    print("Extra Details:")
+    for issue in explanation:
+        print(issue)
+    calculate_candidate_credits(candidate_courses, min_credits, max_credits)
